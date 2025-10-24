@@ -49,7 +49,7 @@ def create(router_ip=None):
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
-            return f"Interface loopback {STUDENT_ID} is created successfully"
+            return f"Interface loopback {STUDENT_ID} is created successfully using Netconf"
     except Exception as e:
         print(f"Error: {e}")
         return f"Cannot create: Interface loopback {STUDENT_ID}"
@@ -71,7 +71,7 @@ def delete(router_ip=None):
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
-            return f"Interface loopback {STUDENT_ID} is deleted successfully"
+            return f"Interface loopback {STUDENT_ID} is deleted successfully using Netconf"
     except Exception as e:
         print(f"Error: {e}")
         return f"Cannot delete: Interface loopback {STUDENT_ID}"
@@ -94,7 +94,7 @@ def enable(router_ip=None):
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
-            return f"Interface loopback {STUDENT_ID} is enabled successfully"
+            return f"Interface loopback {STUDENT_ID} is enabled successfully using Netconf"
     except Exception as e:
         print(f"Error: {e}")
         return f"Cannot enable: Interface loopback {STUDENT_ID}"
@@ -117,7 +117,7 @@ def disable(router_ip=None):
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
-            return f"Interface loopback {STUDENT_ID} is shutdowned successfully"
+            return f"Interface loopback {STUDENT_ID} is shutdowned successfully using Netconf"
     except Exception as e:
         print(f"Error: {e}")
         return f"Cannot shutdown: Interface loopback {STUDENT_ID}"
@@ -160,14 +160,14 @@ def status(router_ip=None):
             admin_status = interface.get('admin-status', 'down')
             oper_status = interface.get('oper-status', 'down')
             if admin_status == 'up' and oper_status == 'up':
-                return f"Interface loopback {STUDENT_ID} is enabled"
+                return f"Interface loopback {STUDENT_ID} is enabled (checked by Netconf)"
             elif admin_status == 'down' and oper_status == 'down':
-                return f"Interface loopback {STUDENT_ID} is disabled"
+                return f"Interface loopback {STUDENT_ID} is disabled (checked by Netconf)"
         else: # no operation-state data
-            return f"No Interface loopback {STUDENT_ID}"
+            return f"No Interface loopback {STUDENT_ID} (checked by Netconf)"
     except Exception as e:
         print(f"Error: {e}")
-        return f"No Interface loopback {STUDENT_ID}"
+        return f"No Interface loopback {STUDENT_ID} (checked by Netconf)"
     finally:
         try:
             m.close_session()

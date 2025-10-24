@@ -9,4 +9,3 @@
         lines:
           - "banner motd ^{{ lookup('env','MOTD') }}^"
       when: lookup('env','MOTD') is not none
-      delegate_to: localhost

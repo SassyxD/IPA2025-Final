@@ -55,7 +55,7 @@ def create(router_ip=None):
 
     if 200 <= resp.status_code <= 299:
         print("STATUS OK: {}".format(resp.status_code))
-        return f"Interface loopback {STUDENT_ID} is created successfully"
+        return f"Interface loopback {STUDENT_ID} is created successfully using Restconf"
     elif resp.status_code == 409:
         print("Interface already exists. Status Code: {}".format(resp.status_code))
         return f"Cannot create: Interface loopback {STUDENT_ID}"
@@ -78,7 +78,7 @@ def delete(router_ip=None):
 
     if 200 <= resp.status_code <= 299:
         print("STATUS OK: {}".format(resp.status_code))
-        return f"Interface loopback {STUDENT_ID} is deleted successfully"
+        return f"Interface loopback {STUDENT_ID} is deleted successfully using Restconf"
     elif resp.status_code == 404:
         print("Interface not found. Status Code: {}".format(resp.status_code))
         return f"Cannot delete: Interface loopback {STUDENT_ID}"
@@ -109,7 +109,7 @@ def enable(router_ip=None):
 
     if 200 <= resp.status_code <= 299:
         print("STATUS OK: {}".format(resp.status_code))
-        return f"Interface loopback {STUDENT_ID} is enabled successfully"
+        return f"Interface loopback {STUDENT_ID} is enabled successfully using Restconf"
     elif resp.status_code == 404:
         print("Interface not found. Status Code: {}".format(resp.status_code))
         return f"Cannot enable: Interface loopback {STUDENT_ID}"
@@ -140,7 +140,7 @@ def disable(router_ip=None):
 
     if 200 <= resp.status_code <= 299:
         print("STATUS OK: {}".format(resp.status_code))
-        return f"Interface loopback {STUDENT_ID} is shutdowned successfully"
+        return f"Interface loopback {STUDENT_ID} is shutdowned successfully using Restconf"
     elif resp.status_code == 404:
         print("Interface not found. Status Code: {}".format(resp.status_code))
         return f"Cannot shutdown: Interface loopback {STUDENT_ID}"
@@ -168,12 +168,12 @@ def status(router_ip=None):
         admin_status = iface.get("admin-status")
         oper_status = iface.get("oper-status")
         if admin_status == 'up' and oper_status == 'up':
-            return f"Interface loopback {STUDENT_ID} is enabled"
+            return f"Interface loopback {STUDENT_ID} is enabled (checked by Restconf)"
         elif admin_status == 'down' and oper_status == 'down':
-            return f"Interface loopback {STUDENT_ID} is disabled"
+            return f"Interface loopback {STUDENT_ID} is disabled (checked by Restconf)"
     elif resp.status_code == 404:
         print("STATUS NOT FOUND: {}".format(resp.status_code))
-        return f"No Interface loopback {STUDENT_ID}"
+        return f"No Interface loopback {STUDENT_ID} (checked by Restconf)"
     else:
         print("Error. Status Code: {}".format(resp.status_code))
         return f"Error checking status of Interface loopback {STUDENT_ID}"

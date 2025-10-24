@@ -134,4 +134,22 @@ All code is complete and committed. To run in production:
   - Test result: Successfully received "/66070061 restconf" command and set method to Restconf
   - Notes: Bug was in variable scoping - command was defined inside else block but referenced outside. Fixed by initializing at top level.
 
+- 2025-10-25  -- Multiple bug fixes after live testing
+  - Action: Tested bot with real Webex room and identified several issues
+  - Problems found:
+    1. Response messages didn't include method name (Restconf/Netconf) as required by spec
+    2. Ansible MOTD playbook had "delegate_to: localhost" causing "Connection type local is not valid" error
+    3. Error message "Error: No command found." not showing correctly
+  - Solutions applied:
+    1. Updated all response messages in restconf_final.py to include "using Restconf" and "(checked by Restconf)"
+    2. Updated all response messages in netconf_final.py to include "using Netconf" and "(checked by Netconf)"
+    3. Removed "delegate_to: localhost" from playbook_motd.yaml - Ansible should run on router directly
+    4. Improved error message logic in ipa2024_final.py to properly show "Error: No command found."
+  - Files changed: restconf_final.py, netconf_final.py, playbook_motd.yaml, ipa2024_final.py
+  - Test results: 
+    - "/66070061 10.0.15.61 create" → "Interface loopback 66070061 is created successfully using Restconf" ✓
+    - "/66070061 10.0.15.61 status" → "Interface loopback 66070061 is enabled (checked by Restconf)" ✓
+    - Invalid IP error messages working correctly ✓
+  - Notes: All messages now conform to IPA2025 spec examples. MOTD playbook should work after removing delegate_to.
+
 -- End of log

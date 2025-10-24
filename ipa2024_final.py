@@ -223,6 +223,10 @@ while True:
                 # No recognized command parsed
                 if not args:
                     responseMessage = "Error: No command specified"
+                elif not command and not ip:
+                    responseMessage = "Error: No command found."
+                elif not command:
+                    responseMessage = "Error: No command found."
                 else:
                     responseMessage = "Error: No command or unknown command"
 
