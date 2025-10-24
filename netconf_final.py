@@ -5,15 +5,21 @@ import os
 ROUTER_IP = os.environ.get("ROUTER_IP", "10.0.15.61")
 STUDENT_ID = os.environ.get("STUDENT_ID", "66070000")
 
-m = manager.connect(
-    host=ROUTER_IP,
-    port=830,
-    username="admin",
-    password="cisco",
-    hostkey_verify=False
+
+def _get_manager(router_ip=None):
+    """Create and return an ncclient manager connected to router_ip (or default)."""
+    host = router_ip or os.environ.get("ROUTER_IP", ROUTER_IP)
+    return manager.connect(
+        host=host,
+        port=830,
+        username="admin",
+        password="cisco",
+        hostkey_verify=False,
+        allow_agent=False,
+        look_for_keys=False,
     )
 
-def create():
+def create(router_ip=None):
     last_three = STUDENT_ID[-3:]
     x = int(last_three[-3])
     y = int(last_three[-2:])
@@ -39,7 +45,7 @@ def create():
     """
 
     try:
-        netconf_reply = netconf_edit_config(netconf_config)
+        netconf_reply = netconf_edit_config(netconf_config, router_ip)
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
@@ -49,7 +55,7 @@ def create():
         return f"Cannot create: Interface loopback {STUDENT_ID}"
 
 
-def delete():
+def delete(router_ip=None):
     netconf_config = f"""
     <config>
         <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
@@ -61,7 +67,7 @@ def delete():
     """
 
     try:
-        netconf_reply = netconf_edit_config(netconf_config)
+        netconf_reply = netconf_edit_config(netconf_config, router_ip)
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
@@ -71,7 +77,7 @@ def delete():
         return f"Cannot delete: Interface loopback {STUDENT_ID}"
 
 
-def enable():
+def enable(router_ip=None):
     netconf_config = f"""
     <config>
         <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
@@ -84,7 +90,7 @@ def enable():
     """
 
     try:
-        netconf_reply = netconf_edit_config(netconf_config)
+        netconf_reply = netconf_edit_config(netconf_config, router_ip)
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
@@ -94,7 +100,7 @@ def enable():
         return f"Cannot enable: Interface loopback {STUDENT_ID}"
 
 
-def disable():
+def disable(router_ip=None):
     netconf_config = f"""
     <config>
         <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
@@ -107,7 +113,7 @@ def disable():
     """
 
     try:
-        netconf_reply = netconf_edit_config(netconf_config)
+        netconf_reply = netconf_edit_config(netconf_config, router_ip)
         xml_data = netconf_reply.xml
         print(xml_data)
         if '<ok/>' in xml_data:
@@ -116,11 +122,21 @@ def disable():
         print(f"Error: {e}")
         return f"Cannot shutdown: Interface loopback {STUDENT_ID}"
 
-def netconf_edit_config(netconf_config):
-    return m.edit_config(target="running", config=netconf_config)
+def netconf_edit_config(netconf_config, router_ip=None):
+    m = _get_manager(router_ip)
+    try:
+        return m.edit_config(target="running", config=netconf_config)
+    finally:
+        try:
+            m.close_session()
+        except Exception:
+            try:
+                m.close()
+            except Exception:
+                pass
 
 
-def status():
+def status(router_ip=None):
     netconf_filter = f"""
     <filter>
         <interfaces-state xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
@@ -131,8 +147,8 @@ def status():
     </filter>
     """
 
+    m = _get_manager(router_ip)
     try:
-        # Use Netconf operational operation to get interfaces-state information
         netconf_reply = m.get(filter=netconf_filter)
         print(netconf_reply)
         netconf_reply_dict = xmltodict.parse(netconf_reply.xml)
@@ -152,3 +168,11 @@ def status():
     except Exception as e:
         print(f"Error: {e}")
         return f"No Interface loopback {STUDENT_ID}"
+    finally:
+        try:
+            m.close_session()
+        except Exception:
+            try:
+                m.close()
+            except Exception:
+                pass

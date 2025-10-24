@@ -10,10 +10,12 @@ import requests
 import json
 import time
 import os
+import re
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import restconf_final
 import netmiko_final
 import ansible_final
+import netconf_final
 
 #######################################################################################
 # 2. Assign the Webex access token to the variable ACCESS_TOKEN using environment variables.
@@ -21,6 +23,32 @@ import ansible_final
 ACCESS_TOKEN = os.environ.get("WEBEX_ACCESS_TOKEN")
 STUDENT_ID = os.environ.get("STUDENT_ID", "66070000")
 ROOM_ID = os.environ.get("WEBEX_ROOM_ID")
+
+# state file to remember selected method (restconf/netconf) per student
+STATE_FILE = "state.json"
+
+# allowed router IPs for IPA2025
+ALLOWED_ROUTERS = {f"10.0.15.{i}" for i in range(61, 66)}
+
+
+def _load_state():
+    try:
+        with open(STATE_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_state(state):
+    try:
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f)
+    except Exception as e:
+        print(f"Warning: could not save state: {e}")
+
+
+def _is_ip(s):
+    return re.match(r"^\d+\.\d+\.\d+\.\d+$", s) is not None
 
 #######################################################################################
 # 3. Prepare parameters get the latest message for messages API.
@@ -73,29 +101,104 @@ while True:
     # check if the text of the message starts with the magic character "/" followed by your studentID and a space and followed by a command name
     #  e.g.  "/66070123 create"
     if message.startswith(f"/{STUDENT_ID}"):
+        parts = message.split()
+        args = parts[1:]
+        responseMessage = "Error: No command or unknown command"
 
-        # extract the command
-        command = message.split()[1]
-        print(command)
+        # load persistent state (method selection)
+        state = _load_state()
+        method = state.get(STUDENT_ID)
 
-# 5. Complete the logic for each command
-
-        if command == "create":
-            responseMessage = restconf_final.create()
-        elif command == "delete":
-            responseMessage = restconf_final.delete()
-        elif command == "enable":
-            responseMessage = restconf_final.enable()
-        elif command == "disable":
-            responseMessage = restconf_final.disable()
-        elif command == "status":
-            responseMessage = restconf_final.status()
-        elif command == "gigabit_status":
-            responseMessage = netmiko_final.gigabit_status()
-        elif command == "showrun":
-            responseMessage = ansible_final.showrun()
+        # if user only sent method selection: "/66070123 restconf"
+        if len(args) == 1 and args[0] in ("restconf", "netconf"):
+            state[STUDENT_ID] = args[0]
+            _save_state(state)
+            responseMessage = f"Ok: {args[0].capitalize()}"
+            print(responseMessage)
         else:
-            responseMessage = "Error: No command or unknown command"
+            # try to extract ip and command from args
+            ip = None
+            command = None
+            for a in args:
+                if _is_ip(a):
+                    ip = a
+                elif a in ("create", "delete", "enable", "disable", "status", "gigabit_status", "showrun", "motd"):
+                    command = a
+
+            # If it's a command that requires method (create/delete/enable/disable/status)
+            if command in ("create", "delete", "enable", "disable", "status"):
+                if not method:
+                    responseMessage = "Error: No method specified"
+                else:
+                    if not ip:
+                        responseMessage = "Error: No IP specified"
+                    elif ip not in ALLOWED_ROUTERS:
+                        responseMessage = "Error: IP not allowed"
+                    else:
+                        if method == "restconf":
+                            if command == "create":
+                                responseMessage = restconf_final.create(router_ip=ip)
+                            elif command == "delete":
+                                responseMessage = restconf_final.delete(router_ip=ip)
+                            elif command == "enable":
+                                responseMessage = restconf_final.enable(router_ip=ip)
+                            elif command == "disable":
+                                responseMessage = restconf_final.disable(router_ip=ip)
+                            elif command == "status":
+                                responseMessage = restconf_final.status(router_ip=ip)
+                        elif method == "netconf":
+                            if command == "create":
+                                responseMessage = netconf_final.create(router_ip=ip)
+                            elif command == "delete":
+                                responseMessage = netconf_final.delete(router_ip=ip)
+                            elif command == "enable":
+                                responseMessage = netconf_final.enable(router_ip=ip)
+                            elif command == "disable":
+                                responseMessage = netconf_final.disable(router_ip=ip)
+                            elif command == "status":
+                                responseMessage = netconf_final.status(router_ip=ip)
+
+            # Commands that do not depend on restconf/netconf selection
+            elif command == "gigabit_status":
+                if not ip:
+                    responseMessage = "Error: No IP specified"
+                elif ip not in ALLOWED_ROUTERS:
+                    responseMessage = "Error: IP not allowed"
+                else:
+                    # override netmiko target and run
+                    netmiko_final.device_ip = ip
+                    responseMessage = netmiko_final.gigabit_status()
+
+            elif command == "showrun":
+                if not ip:
+                    responseMessage = "Error: No IP specified"
+                elif ip not in ALLOWED_ROUTERS:
+                    responseMessage = "Error: IP not allowed"
+                else:
+                    # update hosts inventory to point to requested router IP
+                    try:
+                        hosts_path = os.path.join(os.path.dirname(__file__), "hosts")
+                        with open(hosts_path, "r") as f:
+                            hosts_txt = f.read()
+                        new_hosts = re.sub(r"ansible_host=\d+\.\d+\.\d+\.\d+", f"ansible_host={ip}", hosts_txt)
+                        with open(hosts_path, "w") as f:
+                            f.write(new_hosts)
+                    except Exception as e:
+                        print(f"Warning: cannot update hosts file: {e}")
+                    responseMessage = ansible_final.showrun()
+
+            elif command == "motd":
+                # MOTD is part of Part 2 and will be implemented in ansible/netmiko; for now return informative message
+                responseMessage = "Error: MOTD not implemented yet"
+
+            else:
+                # No recognized command parsed
+                if not args:
+                    responseMessage = "Error: No command specified"
+                else:
+                    responseMessage = "Error: No command or unknown command"
+
+        print("Resolved response:", responseMessage)
         
 # 6. Complete the code to post the message to the Webex Teams room.
 
