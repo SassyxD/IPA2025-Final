@@ -35,3 +35,26 @@ def gigabit_status():
         pprint(ans)
         return ans
 
+
+def read_motd():
+    """Return configured MOTD banner using netmiko. If none, return error string."""
+    try:
+        with ConnectHandler(**device_params) as ssh:
+            # show running-config and filter banner motd line
+            output = ssh.send_command("show running-config | include banner motd")
+            if not output or "banner motd" not in output:
+                return "Error: No MOTD Configured"
+            # expect something like: banner motd ^Authorized users only! Managed by 66070123^
+            # extract between first ^ and last ^
+            m = output.strip()
+            # find the first caret ^ occurrence
+            if '^' in m:
+                parts = m.split('^')
+                if len(parts) >= 2 and parts[1].strip():
+                    return parts[1].strip()
+            # fallback: return full line
+            return m
+    except Exception as e:
+        print(f"Error reading MOTD via netmiko: {e}")
+        return "Error: No MOTD Configured"
+

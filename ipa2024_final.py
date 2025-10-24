@@ -188,8 +188,36 @@ while True:
                     responseMessage = ansible_final.showrun()
 
             elif command == "motd":
-                # MOTD is part of Part 2 and will be implemented in ansible/netmiko; for now return informative message
-                responseMessage = "Error: MOTD not implemented yet"
+                # MOTD: if a message follows 'motd' -> set via Ansible; otherwise read via netmiko
+                motd_message = ""
+                if 'motd' in args:
+                    try:
+                        motd_index = args.index('motd')
+                        motd_message = ' '.join(args[motd_index+1:]).strip()
+                    except Exception:
+                        motd_message = ""
+
+                if motd_message:
+                    # set MOTD via Ansible
+                    if not ip:
+                        responseMessage = "Error: No IP specified"
+                    elif ip not in ALLOWED_ROUTERS:
+                        responseMessage = "Error: IP not allowed"
+                    else:
+                        result = ansible_final.motd(motd_message, router_ip=ip)
+                        if result == 'ok':
+                            responseMessage = "Ok: success"
+                        else:
+                            responseMessage = result
+                else:
+                    # read MOTD using netmiko
+                    if not ip:
+                        responseMessage = "Error: No IP specified"
+                    elif ip not in ALLOWED_ROUTERS:
+                        responseMessage = "Error: IP not allowed"
+                    else:
+                        netmiko_final.device_ip = ip
+                        responseMessage = netmiko_final.read_motd()
 
             else:
                 # No recognized command parsed

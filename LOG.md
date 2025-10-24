@@ -16,3 +16,11 @@
 
 -- End of entry
 
+	- 2025-10-25  -- Implemented MOTD set/read and added playbook
+		- Files changed/added: `playbook_motd.yaml`, `ansible_final.py`, `netmiko_final.py`, `ipa2024_final.py`
+		- Summary: Added `playbook_motd.yaml` to configure MOTD via Ansible. Added `ansible_final.motd()` to run that playbook with an MOTD environment variable. Added `netmiko_final.read_motd()` to read the configured MOTD via Netmiko. Updated dispatcher to parse and handle `/studentID IP motd <message>` (set) and `/studentID IP motd` (read).
+		- Notes: Ansible playbooks require `cisco.ios` collection and `ansible-playbook` present. Netmiko and ncclient libraries are required for the dynamic NETCONF/Netmiko features.
+		- Next: Implement tests or small smoke checks, then finalize and prepare the report.
+
+	-- End of entry
+
