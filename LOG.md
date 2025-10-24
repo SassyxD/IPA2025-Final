@@ -124,4 +124,14 @@ All code is complete and committed. To run in production:
   - Commits pushed: 7 commits (from docs(log) to docs: add comprehensive Webex usage guide)
   - Notes: All changes are now available on GitHub. Repository includes complete implementation of IPA2025 requirements with proper conventional commits and documentation.
 
+- 2025-10-25  -- Testing with Webex and bug fix
+  - Action: Set up Webex bot and tested with IPA2025 room
+  - Room ID: Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1JPT00vYmQwODczMTAtNmMyNi0xMWYwLWE1MWMtNzkzZDM2ZjZjM2Zm
+  - Student ID: 66070061
+  - Problem encountered: NameError - variable 'command' was not defined in the outer scope when checking for showrun file attachment
+  - Solution: Added initialization of 'command = None' and 'ip = None' at the beginning of the message parsing block (before the if-else branches)
+  - Files changed: ipa2024_final.py, list.py
+  - Test result: Successfully received "/66070061 restconf" command and set method to Restconf
+  - Notes: Bug was in variable scoping - command was defined inside else block but referenced outside. Fixed by initializing at top level.
+
 -- End of log

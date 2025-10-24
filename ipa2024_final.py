@@ -104,6 +104,8 @@ while True:
         parts = message.split()
         args = parts[1:]
         responseMessage = "Error: No command or unknown command"
+        command = None  # Initialize command variable
+        ip = None  # Initialize ip variable
 
         # load persistent state (method selection)
         state = _load_state()
@@ -117,8 +119,6 @@ while True:
             print(responseMessage)
         else:
             # try to extract ip and command from args
-            ip = None
-            command = None
             for a in args:
                 if _is_ip(a):
                     ip = a
