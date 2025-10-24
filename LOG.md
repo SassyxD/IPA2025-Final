@@ -40,4 +40,82 @@
   - Files changed: Updated .gitignore to exclude .venv/, __pycache__/, state.json, and show_run_*.txt files from git
   - Notes: Virtual environment is now ready for testing. All import errors should be resolved when running Python scripts with the activated venv.
 
+- 2025-10-25  -- Created Webex usage documentation
+  - Files added: WEBEX_USAGE.md
+  - Summary: Created comprehensive guide for using the bot with Webex Teams, including:
+    - Prerequisites and environment setup
+    - All supported commands with examples
+    - Method selection (restconf/netconf) workflow
+    - Router IP specification (10.0.15.61-65)
+    - Loopback interface operations (create/delete/enable/disable/status)
+    - MOTD configuration (set via Ansible, read via Netmiko)
+    - GigabitEthernet status check (via Netmiko/TextFSM)
+    - Show running config (via Ansible playbook)
+    - Error messages reference
+    - Example workflow and troubleshooting tips
+  - Notes: Document ready for students to test bot functionality in IPA2025 lab room.
+
 -- End of entry
+
+## Summary of All Changes for IPA2025
+
+### Implementation Overview:
+1. **Part 1 - Dynamic Method & Router Selection**: 
+   - Added persistent state file (state.json) to remember method selection (restconf/netconf)
+   - Implemented parser to extract method, IP, and command from Webex messages
+   - Modified restconf_final.py and netconf_final.py to accept router_ip parameter
+   - Added validation for allowed router IPs (10.0.15.61-65)
+   - Added clear error messages as per requirements
+
+2. **Part 2 - MOTD & Enhanced Commands**:
+   - Created playbook_motd.yaml for Ansible-based MOTD configuration
+   - Added ansible_final.motd() function to run MOTD playbook with environment variable
+   - Added netmiko_final.read_motd() to retrieve configured MOTD via Netmiko
+   - Enhanced dispatcher to handle MOTD set (with message) and read (without message)
+   - Existing gigabit_status and showrun already implemented, updated to use dynamic IPs
+
+3. **Infrastructure**:
+   - Set up Python virtual environment with all dependencies
+   - Created comprehensive .gitignore
+   - Created WEBEX_USAGE.md documentation
+
+### Files Created/Modified:
+**Created:**
+- playbook_motd.yaml (Ansible MOTD configuration)
+- WEBEX_USAGE.md (User guide)
+- .gitignore (Git ignore patterns)
+- state.json (will be created at runtime for method persistence)
+
+**Modified:**
+- ipa2024_final.py (dispatcher with method/IP parsing and validation)
+- restconf_final.py (dynamic router_ip support)
+- netconf_final.py (per-call manager creation with router_ip)
+- netmiko_final.py (added read_motd function)
+- ansible_final.py (added motd function, imported re module)
+- LOG.md (detailed progress notes)
+
+### All Git Commits:
+1. docs(log): add initial work log and plan
+2. feat(api): add method selection and dynamic router IP support for restconf/netconf
+3. feat(motd): add MOTD support via Ansible and read via Netmiko
+4. test(chk): add smoke test result to LOG.md
+5. chore(env): setup Python virtual environment and update gitignore
+6. docs: add IPA2025 assignment requirements
+
+### Testing Status:
+- ✅ Python syntax validation passed (compileall)
+- ✅ Virtual environment created with all dependencies
+- ✅ cisco.ios Ansible collection installed
+- ⚠️ Runtime testing requires: 
+  - Webex bot token and room ID
+  - Network access to routers (10.0.15.61-65)
+  - NETCONF/RESTCONF enabled on routers
+
+### Ready for Deployment:
+All code is complete and committed. To run in production:
+1. Set environment variables (WEBEX_ACCESS_TOKEN, WEBEX_ROOM_ID, STUDENT_ID)
+2. Activate venv: `source .venv/bin/activate`
+3. Run: `python3 ipa2024_final.py`
+4. Test with commands from WEBEX_USAGE.md
+
+-- End of log
