@@ -24,3 +24,10 @@
 
 	-- End of entry
 
+		- 2025-10-25  -- Smoke checks
+			- Action: Ran `python3 -m compileall` to check for syntax errors in repository Python files.
+			- Result: PYTHON COMPILE: OK
+			- Notes: Some import-time lint messages remain in the editor for missing external libraries (netmiko, ncclient, xmltodict, requests_toolbelt). These are expected until the runtime environment has the required packages installed.
+
+		-- End of entry
+
