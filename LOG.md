@@ -24,10 +24,20 @@
 
 	-- End of entry
 
-		- 2025-10-25  -- Smoke checks
-			- Action: Ran `python3 -m compileall` to check for syntax errors in repository Python files.
-			- Result: PYTHON COMPILE: OK
-			- Notes: Some import-time lint messages remain in the editor for missing external libraries (netmiko, ncclient, xmltodict, requests_toolbelt). These are expected until the runtime environment has the required packages installed.
+- 2025-10-25  -- Smoke checks
+  - Action: Ran `python3 -m compileall` to check for syntax errors in repository Python files.
+  - Result: PYTHON COMPILE: OK
+  - Notes: Some import-time lint messages remain in the editor for missing external libraries (netmiko, ncclient, xmltodict, requests_toolbelt). These are expected until the runtime environment has the required packages installed.
 
-		-- End of entry
+- 2025-10-25  -- Python virtual environment setup
+  - Action: Created Python virtual environment (.venv) and installed all dependencies from requirements.txt
+  - Commands used:
+    - `python3 -m venv .venv`
+    - `source .venv/bin/activate && pip install --upgrade pip`
+    - `source .venv/bin/activate && pip install -r requirements.txt`
+    - `source .venv/bin/activate && ansible-galaxy collection install cisco.ios`
+  - Result: Successfully installed all required packages (requests, ncclient, netmiko, xmltodict, ansible, etc.) and cisco.ios Ansible collection
+  - Files changed: Updated .gitignore to exclude .venv/, __pycache__/, state.json, and show_run_*.txt files from git
+  - Notes: Virtual environment is now ready for testing. All import errors should be resolved when running Python scripts with the activated venv.
 
+-- End of entry
