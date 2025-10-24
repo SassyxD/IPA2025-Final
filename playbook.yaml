@@ -1,0 +1,25 @@
+---
+- name: Backup Router Configuration
+  hosts: routers
+  gather_facts: no
+
+  tasks:
+    - name: Get router hostname
+      cisco.ios.ios_command:
+        commands: show run | include hostname
+      register: hostname_output
+
+    - name: Extract hostname
+      set_fact:
+        router_hostname: "{{ hostname_output.stdout[0].split()[1] }}"
+
+    - name: Save running config to file
+      cisco.ios.ios_command:
+        commands: show running-config
+      register: running_config
+
+    - name: Write config to file
+      copy:
+        content: "{{ running_config.stdout[0] }}"
+        dest: "./show_run_{{ lookup('env', 'STUDENT_ID') }}_{{ router_hostname }}.txt"
+      delegate_to: localhost
