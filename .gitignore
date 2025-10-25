@@ -11,6 +11,9 @@ state.json
 # Output files
 show_run_*.txt
 
+# Report (for Google Docs only)
+REPORT.md
+
 # IDE
 .vscode/
 .idea/
